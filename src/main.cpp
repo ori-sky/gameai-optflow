@@ -35,12 +35,19 @@ void camera_process(boost::shared_ptr<cv::Mat> frame) {
 
 void camera_loop(boost::shared_ptr<boost::asio::io_service> io_service, cv::VideoCapture vid) {
 	auto frame = boost::make_shared<cv::Mat>();
+	cv::Mat sobel, kpframe;
 	vid >> *frame;
+	cvtColor(*frame, sobel, cv::COLOR_BGR2GRAY);
+	for(unsigned int n = 1; n < 7; n += 2) {
+		cv::GaussianBlur(sobel, sobel, cv::Size(n, n), 0, 0);
+	}
+	cv::Sobel(sobel, sobel, CV_8U, 1, 1, 5);
+	cv::normalize(sobel, sobel, 0, 800, cv::NORM_MINMAX, CV_8U);
 
 	std::vector<cv::KeyPoint> kp;
-	cv::Ptr<cv::FastFeatureDetector> dt = cv::FastFeatureDetector::create();
-	dt->detect(*frame, kp);
-	cv::drawKeypoints(*frame, kp, *frame, cv::Scalar::all(-1), 0);
+	auto dt = cv::FastFeatureDetector::create(100);
+	dt->detect(sobel, kp);
+	cv::drawKeypoints(sobel, kp, *frame, cv::Scalar::all(1), 1);
 
 	//io_service->post(std::bind(camera_process, frame));
 	cv::imshow("optflow", *frame);
