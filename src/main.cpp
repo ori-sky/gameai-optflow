@@ -42,7 +42,10 @@ void camera_loop(boost::shared_ptr<boost::asio::io_service> io_service, cv::Vide
 		cv::GaussianBlur(sobel, sobel, cv::Size(n, n), 0, 0);
 	}
 	cv::Sobel(sobel, sobel, CV_8U, 1, 1, 5);
-	cv::normalize(sobel, sobel, 0, 800, cv::NORM_MINMAX, CV_8U);
+	cv::normalize(sobel, sobel, 0, 1024, cv::NORM_MINMAX, CV_8U);
+	for(unsigned int n = 1; n < 5; n += 2) {
+		cv::GaussianBlur(sobel, sobel, cv::Size(n, n), 0, 0);
+	}
 
 	std::vector<cv::KeyPoint> kp;
 	auto dt = cv::FastFeatureDetector::create(120);
