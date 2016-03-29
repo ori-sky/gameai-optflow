@@ -8,18 +8,17 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/videoio/videoio.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
 #define CONFIG_NUM_WORKERS 2
 
-cv::UMat gray, prevgray;
+cv::Mat gray, prevgray;
 
 void camera_process(boost::shared_ptr<cv::Mat> frame) {
 	cv::Mat flow;
-	cv::UMat uflow;
 	cvtColor(*frame, gray, cv::COLOR_BGR2GRAY);
 	if(!prevgray.empty()) {
-		calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
-		uflow.copyTo(flow);
+		calcOpticalFlowFarneback(prevgray, gray, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
 	}
 	cv::Point2f total;
 	const int step = 16;
@@ -37,7 +36,13 @@ void camera_process(boost::shared_ptr<cv::Mat> frame) {
 void camera_loop(boost::shared_ptr<boost::asio::io_service> io_service, cv::VideoCapture vid) {
 	auto frame = boost::make_shared<cv::Mat>();
 	vid >> *frame;
-	io_service->post(std::bind(camera_process, frame));
+
+	std::vector<cv::KeyPoint> kp;
+	cv::Ptr<cv::FastFeatureDetector> dt = cv::FastFeatureDetector::create();
+	dt->detect(*frame, kp);
+	cv::drawKeypoints(*frame, kp, *frame, cv::Scalar::all(-1), 0);
+
+	//io_service->post(std::bind(camera_process, frame));
 	cv::imshow("optflow", *frame);
 	if(cv::waitKey(30) < 0) {
 		io_service->post(std::bind(camera_loop, io_service, vid));
