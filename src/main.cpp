@@ -45,7 +45,7 @@ void camera_loop(boost::shared_ptr<boost::asio::io_service> io_service, cv::Vide
 	cv::normalize(sobel, sobel, 0, 800, cv::NORM_MINMAX, CV_8U);
 
 	std::vector<cv::KeyPoint> kp;
-	auto dt = cv::FastFeatureDetector::create(100);
+	auto dt = cv::FastFeatureDetector::create(120);
 	dt->detect(sobel, kp);
 	cv::drawKeypoints(sobel, kp, *frame, cv::Scalar::all(1), 1);
 
